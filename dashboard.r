@@ -13,8 +13,6 @@ library(plotly)
 conn <- dbConnect(SQLite(), "database.db")
 liiklusonnetus_df <- dbReadTable(conn, "liiklusonnetus")
 liiklusonnetus_df$Toimumisaeg <- as.Date(liiklusonnetus_df$Toimumisaeg)
-#liiklusonnetus_df$distance <- as.numeric(liiklusonnetus_df$distance)
-#liiklusonnetus_df$closest_feature <- as.character(liiklusonnetus_df$closest_feature)
 
 
 ui <- navbarPage(
@@ -26,18 +24,39 @@ ui <- navbarPage(
     "Graafik & Tabel",
     fluidRow(
       column(
-        width = 12,
+        width = 4,
         br(),
         sliderInput(
           "FILTER",
-          "FILTER",
+          "Õnnetuse toimumise aeg:",
           min = min(liiklusonnetus_df$Toimumisaeg),
           max = max(liiklusonnetus_df$Toimumisaeg),
           value = c((max(liiklusonnetus_df$Toimumisaeg)-365), max(liiklusonnetus_df$Toimumisaeg))
         )
+      ),
+       column(
+        width = 4,
+        br(),
+      selectInput(
+          "Liiklusonnetuse_liik",
+          "Vali liiklusõnnetuse liik:",
+          choices = unique(liiklusonnetus_df$Liiklusonnetuse_liik),
+          multiple = TRUE,
+          selected = unique(liiklusonnetus_df$Liiklusonnetuse_liik)
+        )
+      ),
+      column(
+        width = 4,
+        br(),
+      checkboxGroupInput(
+          "Asula_valik",
+          "Asula valik:",
+          choices = unique(liiklusonnetus_df$Asula),
+          selected = unique(liiklusonnetus_df$Asula)
+        )
       )
     ),
-    fluidRow(
+      fluidRow(
       column(
         width = 12,
         plotlyOutput("liiklusonnetused_jagunemine"),
@@ -52,14 +71,35 @@ ui <- navbarPage(
     "Kaart",
     fluidRow(
       column(
-        width = 12,
+        width = 4,
         br(),
         sliderInput(
           "FILTER2",
-          "FILTER2",
+          "Õnnetuse toimumise aeg:",
           min = min(liiklusonnetus_df$Toimumisaeg),
           max = max(liiklusonnetus_df$Toimumisaeg),
           value = c((max(liiklusonnetus_df$Toimumisaeg)-365), max(liiklusonnetus_df$Toimumisaeg))
+        )
+      ),
+       column(
+        width = 4,
+        br(),
+      selectInput(
+          "Liiklusonnetuse_liik2",
+          "Vali liiklusõnnetuse liik:",
+          choices = unique(liiklusonnetus_df$Liiklusonnetuse_liik),
+          multiple = TRUE,
+          selected = unique(liiklusonnetus_df$Liiklusonnetuse_liik)
+        )
+      ),
+      column(
+        width = 4,
+        br(),
+      checkboxGroupInput(
+          "Asula_valik2",
+          "Asula valik:",
+          choices = unique(liiklusonnetus_df$Asula),
+          selected = unique(liiklusonnetus_df$Asula)
         )
       )
     ),
@@ -76,7 +116,12 @@ ui <- navbarPage(
 server <- function(input, output) {
 
 output$liiklusonnetused_jagunemine <- renderPlotly({
-  filtered_df <- liiklusonnetus_df[(as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER[1] & (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER[2], ]
+filtered_df <- liiklusonnetus_df[
+  (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER[1] & 
+  (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER[2] &
+  liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik &
+  liiklusonnetus_df$Asula == input$Asula_valik,
+]
  
   p <- ggplot(filtered_df, aes(x = Liiklusonnetuse_liik)) +
     geom_bar(fill = "#428bca") +
@@ -92,7 +137,13 @@ output$liiklusonnetused_jagunemine <- renderPlotly({
 
 
 output$tabel <- renderDataTable({
-  filtered_df <- liiklusonnetus_df[(as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER[1] & (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER[2], ]
+filtered_df <- liiklusonnetus_df[
+  (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER[1] & 
+  (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER[2] &
+  liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik &
+  liiklusonnetus_df$Asula == input$Asula_valik,
+ ]
+ 
   selected_cols <- setdiff(colnames(filtered_df), c("GPS_X", "GPS_Y", "Day", "Month", "Year", "Hour", "Minute", "Longitude", "Latitude"))  # Kustutatavate veergude nimetused
   datatable(filtered_df[, selected_cols, drop = FALSE], class = "compact hover", filter = "top")
 })
@@ -100,8 +151,12 @@ output$tabel <- renderDataTable({
 
   # Loome kaardi
 output$kaart <- renderLeaflet({
-  filtered_df <- liiklusonnetus_df[(as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER2[1] & (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER2[2], ]
-
+filtered_df <- liiklusonnetus_df[
+  (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER2[1] & 
+  (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER2[2] &
+  liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik2 &
+  liiklusonnetus_df$Asula == input$Asula_valik2,
+]
   kaart <- leaflet()
 
   kaart <- kaart %>%
@@ -118,7 +173,7 @@ output$kaart <- renderLeaflet({
     asula <- filtered_df$Asula[i]
     kaart <- addMarkers(kaart, lng = lng, lat = lat, popup = paste("Toimumisaeg:", toimumisaeg, "<br>",
                                                                   "Liiklusonnetuse liik:", liiklusonnetuse_liik, "<br>",
-                                                                  "Asula:", asula))
+                                                                  "Asula:", asula, "<br>"))
   }
 
   kaart
