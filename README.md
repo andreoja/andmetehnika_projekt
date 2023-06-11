@@ -19,3 +19,12 @@ The notebook will:
 ### 3. RUN transform.ipynb
 
 This will clean the data and write it into a sqlite3 database
+
+### 4. RUN dashboard.r
+
+This will run the dashboard which allows you to:
+
+- Filter the data bydate range to display relevant information.
+- View a data table showing the selected data.
+- Explore the data on an interactive map.
+- Visualize the distribution of traffic accidents by accident type using a bar chart.
