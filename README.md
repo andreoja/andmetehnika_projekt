@@ -28,6 +28,8 @@ This will clean the data and write it into a sqlite3 database
 
 ### **3. Open and run closest_traffic_feature.ipynb in Jupyter Notebook**
 
+This will make 2 new columns to liiklusonnetused table. For every row it will look for a closest traffic measuring feature and add it to the table. Then it will calculate the distance between the feature and the place where accident happened.
+
 ### 4. Open and run dashboard.r in RStudio
 
 This will run the dashboard which allows you to:
