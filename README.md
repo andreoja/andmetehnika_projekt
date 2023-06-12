@@ -2,32 +2,29 @@
 
 This project needs R, Python and SQLite3.
 
-
-### **1. THE DATA**
+### **THE DATA**
 API that is used here is https://avaandmed.eesti.ee/api/
 The documentation can be found here: https://avaandmed.eesti.ee/api/dataset-docs/
 Alltogether 3 tables will be downloaded:
-- liiklusonnetused: information about accidents in Estonia
-- 
+- liiklusonnetused: information about accidents in Estonia.
+- liiklusloenduse andmed: information about traffic in Estonia.
+- liiklusloenduseseadmed: information about features that measure traffic in Estonia.
 
+All the metadata can be found in the links provided in fetch.ipynb
 
-### **2. RUN fetch.ipynb**
+### **1. Open and run fetch.ipynb in Jupyter Notebook**
 
-API that is used here is https://avaandmed.eesti.ee/api/
+This notebook will:
 
-the documentation can be found here: https://avaandmed.eesti.ee/api/dataset-docs/
+- download "liiklusõnnetused_2011_2022"a .csv file from API and save it as "liiklusonnetused.csv" (https://avaandmed.eesti.ee/datasets/inimkannatanutega-liiklusonnetuste-andmed)
+- download all files from "liiklusloenduse andmed" the files are saved into folder "liiklusloendus". The folder will be created by script (https://avaandmed.eesti.ee/datasets/liiklusloenduse-andmed)
+- downloads liiklusloendusseadmed from (https://avaandmed.eesti.ee/datasets/liiklusloendusseadmed)
 
-The notebook will:
-
-1. download "liiklusõnnetused_2011_2022"a .csv file from API and save it as liiklusonnetused.csv https://avaandmed.eesti.ee/datasets/inimkannatanutega-liiklusonnetuste-andmed
-2. download all files from "liiklusloenduse andmed" the files are saved into folder liiklusloendus https://avaandmed.eesti.ee/datasets/liiklusloenduse-andmed
-3. downloads liiklusloendusseadmed from https://avaandmed.eesti.ee/datasets/liiklusloendusseadmed
-
-### 3. RUN transform.ipynb
+### **2. Open and run transform.ipynb in Jupyter Notebook**
 
 This will clean the data and write it into a sqlite3 database
 
-### 4. RUN dashboard.r
+### 3. Open and run dashboard.r in RStudio
 
 This will run the dashboard which allows you to:
 
