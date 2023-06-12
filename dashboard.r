@@ -153,7 +153,10 @@ filtered_df <- liiklusonnetus_df[
  ]
  
   selected_cols <- setdiff(colnames(filtered_df), c("GPS_X", "GPS_Y", "Day", "Month", "Year", "Hour", "Minute", "Longitude", "Latitude"))  # Kustutatavate veergude nimetused
+  
   datatable(filtered_df[, selected_cols, drop = FALSE], class = "compact hover", filter = "top")
+  
+  
 })
 
 
