@@ -1,8 +1,15 @@
-# andmetehnika_projekt
+# LIIKLUSÕNNETUSTE_ETL
 
-### **1. CREATE SQLITE3 DATABASE**
+This project needs R, Python and SQLite3.
 
-In this Project sqlite3 database named "database.db" has to be created
+
+### **1. THE DATA**
+API that is used here is https://avaandmed.eesti.ee/api/
+The documentation can be found here: https://avaandmed.eesti.ee/api/dataset-docs/
+Alltogether 3 tables will be downloaded:
+- liiklusonnetused: information about accidents in Estonia
+- 
+
 
 ### **2. RUN fetch.ipynb**
 
@@ -19,3 +26,12 @@ The notebook will:
 ### 3. RUN transform.ipynb
 
 This will clean the data and write it into a sqlite3 database
+
+### 4. RUN dashboard.r
+
+This will run the dashboard which allows you to:
+
+- Filter the data bydate range to display relevant information.
+- View a data table showing the selected data.
+- Explore the data on an interactive map.
+- Visualize the distribution of traffic accidents by accident type using a bar chart.

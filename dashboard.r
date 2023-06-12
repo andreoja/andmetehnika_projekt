@@ -22,6 +22,8 @@ conn <- dbConnect(SQLite(), "database.db")
 liiklusonnetus_df <- dbReadTable(conn, "liiklusonnetus")
 liiklusonnetus_df$Toimumisaeg <- as.Date(liiklusonnetus_df$Toimumisaeg)
 
+# Close the connection
+conn.close()
 
 ui <- navbarPage(
   # Title
@@ -69,6 +71,7 @@ ui <- navbarPage(
         width = 12,
         plotlyOutput("liiklusonnetused_jagunemine"),
         br(),
+        plotlyOutput("liiklusonnetused_jagunemine2"),
         h2("Andmetabel"),
         dataTableOutput("tabel")
       )
@@ -143,6 +146,26 @@ filtered_df <- liiklusonnetus_df[
 
 })
 
+output$liiklusonnetused_jagunemine2 <- renderPlotly({
+  filtered_df <- liiklusonnetus_df[
+    (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER[1] & 
+    (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER[2] &
+    liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik &
+    liiklusonnetus_df$Asula == input$Asula_valik,
+  ]
+  
+  tulemused <- table(filtered_df$closest_feature)
+  top_20 <- head(sort(tulemused, decreasing = TRUE), 20)
+
+ plot_ly(x = top_20, y = names(top_20), type = "bar") %>%
+  layout(yaxis = list(title = "Closest Feature"), xaxis = list(title = "Esinemissagedus")) %>%
+  layout(barmode = "stack") %>%
+  layout(xaxis = list(tickangle = 90)) %>%
+  layout(showlegend = FALSE)
+
+})
+
+
 
 output$tabel <- renderDataTable({
 filtered_df <- liiklusonnetus_df[
@@ -153,24 +176,23 @@ filtered_df <- liiklusonnetus_df[
  ]
  
   selected_cols <- setdiff(colnames(filtered_df), c("GPS_X", "GPS_Y", "Day", "Month", "Year", "Hour", "Minute", "Longitude", "Latitude"))  # Kustutatavate veergude nimetused
-  
   datatable(filtered_df[, selected_cols, drop = FALSE], class = "compact hover", filter = "top")
-  
-  
 })
+
+
 
 
   # Map
 output$kaart <- renderLeaflet({
-filtered_df <- liiklusonnetus_df[
-  (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER2[1] & 
-  (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER2[2] &
-  liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik2 &
-  liiklusonnetus_df$Asula == input$Asula_valik2,
-]
-  kaart <- leaflet()
-
-  kaart <- kaart %>%
+  filtered_df <- liiklusonnetus_df[
+    (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER2[1] & 
+    (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER2[2] &
+    liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik2 &
+    liiklusonnetus_df$Asula == input$Asula_valik2,
+    c("coordinates", "Liiklusonnetuse_liik", "Toimumisaeg", "Asula", "closest_feature", "distance")
+  ]
+  
+  kaart <- leaflet() %>%
     addTiles() %>%
     setView(lng = 25.0, lat = 58.6, zoom = 7)
 
@@ -182,13 +204,18 @@ filtered_df <- liiklusonnetus_df[
     liiklusonnetuse_liik <- filtered_df$Liiklusonnetuse_liik[i]
     toimumisaeg <- filtered_df$Toimumisaeg[i]
     asula <- filtered_df$Asula[i]
+    closest_feature <- filtered_df$closest_feature[i]
+    distance <- round(filtered_df$distance[i], 2)  # Ümarda distance 2 kohta peale koma
     kaart <- addMarkers(kaart, lng = lng, lat = lat, popup = paste("Toimumisaeg:", toimumisaeg, "<br>",
                                                                   "Liiklusonnetuse liik:", liiklusonnetuse_liik, "<br>",
-                                                                  "Asula:", asula, "<br>"))
+                                                                  "Asula:", asula, "<br>",
+                                                                  "Lähim mõõdik:", closest_feature, " (", distance, " km)"))
   }
 
   kaart
 })
+
+
 
 }
 
