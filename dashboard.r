@@ -125,8 +125,8 @@ filtered_df <- liiklusonnetus_df[
  
   p <- ggplot(filtered_df, aes(x = Liiklusonnetuse_liik)) +
     geom_bar(fill = "#428bca") +
-    ylab("Liiklusõnnetuse liik") +
-    xlab("Esinemiste arv") +
+    xlab("Liiklusõnnetuse liik") +
+    ylab("Esinemiste arv") +
     ggtitle("Liiklusõnnetuste esinemine") +
     coord_flip() +
     scale_y_continuous(expand = c(0, 0))
