@@ -3,9 +3,11 @@
 This project needs R, Python and SQLite3.
 
 ### **THE DATA**
+
 API that is used here is https://avaandmed.eesti.ee/api/
 The documentation can be found here: https://avaandmed.eesti.ee/api/dataset-docs/
 Alltogether 3 tables will be downloaded:
+
 - liiklusonnetused: information about accidents in Estonia.
 - liiklusloenduse andmed: information about traffic in Estonia.
 - liiklusloenduseseadmed: information about features that measure traffic in Estonia.
@@ -24,7 +26,9 @@ This notebook will:
 
 This will clean the data and write it into a sqlite3 database
 
-### 3. Open and run dashboard.r in RStudio
+### **3. Open and run closest_traffic_feature.ipynb in Jupyter Notebook**
+
+### 4. Open and run dashboard.r in RStudio
 
 This will run the dashboard which allows you to:
 

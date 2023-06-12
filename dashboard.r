@@ -23,7 +23,8 @@ liiklusonnetus_df <- dbReadTable(conn, "liiklusonnetus")
 liiklusonnetus_df$Toimumisaeg <- as.Date(liiklusonnetus_df$Toimumisaeg)
 
 # Close the connection
-conn.close()
+#conn.close()
+dbDisconnect(conn)
 
 ui <- navbarPage(
   # Title
