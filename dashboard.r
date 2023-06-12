@@ -1,12 +1,20 @@
-#Select all and ctrl+enter to run the code
+#Select all and ctrl+enter to run the code - if needed, uncomment the installation codes
 
+#install.packages("RSQLite")
 library(RSQLite)
+#install.packages("DBI")
 library(DBI)
+#install.packages("ggplot2")
 library(ggplot2)
+#install.packages("shiny")
 library(shiny)
+#install.packages("leaflet")
 library(leaflet)
+#install.packages("DT")
 library(DT)
+#install.packages("lubridate")
 library(lubridate)
+#install.packages("plotly")
 library(plotly)
 
 #connection with the database
@@ -14,12 +22,14 @@ conn <- dbConnect(SQLite(), "database.db")
 liiklusonnetus_df <- dbReadTable(conn, "liiklusonnetus")
 liiklusonnetus_df$Toimumisaeg <- as.Date(liiklusonnetus_df$Toimumisaeg)
 
+# Close the connection
+conn.close()
 
 ui <- navbarPage(
-  # Paneeli pealkiri
+  # Title
   title = "Liiklusõnnetuste jagunemine",
   
-  # Joonise kuvamise ala
+  # Tabs
   tabPanel(
     "Graafik & Tabel",
     fluidRow(
@@ -61,6 +71,7 @@ ui <- navbarPage(
         width = 12,
         plotlyOutput("liiklusonnetused_jagunemine"),
         br(),
+        plotlyOutput("liiklusonnetused_jagunemine2"),
         h2("Andmetabel"),
         dataTableOutput("tabel")
       )
@@ -112,7 +123,7 @@ ui <- navbarPage(
   )
 )
 
-# Defineerime serveriosa
+# Server
 server <- function(input, output) {
 
 output$liiklusonnetused_jagunemine <- renderPlotly({
@@ -135,6 +146,26 @@ filtered_df <- liiklusonnetus_df[
 
 })
 
+output$liiklusonnetused_jagunemine2 <- renderPlotly({
+  filtered_df <- liiklusonnetus_df[
+    (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER[1] & 
+    (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER[2] &
+    liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik &
+    liiklusonnetus_df$Asula == input$Asula_valik,
+  ]
+  
+  tulemused <- table(filtered_df$closest_feature)
+  top_20 <- head(sort(tulemused, decreasing = TRUE), 20)
+
+ plot_ly(x = top_20, y = names(top_20), type = "bar") %>%
+  layout(yaxis = list(title = "Closest Feature"), xaxis = list(title = "Esinemissagedus")) %>%
+  layout(barmode = "stack") %>%
+  layout(xaxis = list(tickangle = 90)) %>%
+  layout(showlegend = FALSE)
+
+})
+
+
 
 output$tabel <- renderDataTable({
 filtered_df <- liiklusonnetus_df[
@@ -149,17 +180,19 @@ filtered_df <- liiklusonnetus_df[
 })
 
 
-  # Loome kaardi
-output$kaart <- renderLeaflet({
-filtered_df <- liiklusonnetus_df[
-  (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER2[1] & 
-  (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER2[2] &
-  liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik2 &
-  liiklusonnetus_df$Asula == input$Asula_valik2,
-]
-  kaart <- leaflet()
 
-  kaart <- kaart %>%
+
+  # Map
+output$kaart <- renderLeaflet({
+  filtered_df <- liiklusonnetus_df[
+    (as.Date(liiklusonnetus_df$Toimumisaeg)) >= input$FILTER2[1] & 
+    (as.Date(liiklusonnetus_df$Toimumisaeg)) <= input$FILTER2[2] &
+    liiklusonnetus_df$Liiklusonnetuse_liik %in% input$Liiklusonnetuse_liik2 &
+    liiklusonnetus_df$Asula == input$Asula_valik2,
+    c("coordinates", "Liiklusonnetuse_liik", "Toimumisaeg", "Asula", "closest_feature", "distance")
+  ]
+  
+  kaart <- leaflet() %>%
     addTiles() %>%
     setView(lng = 25.0, lat = 58.6, zoom = 7)
 
@@ -171,15 +204,20 @@ filtered_df <- liiklusonnetus_df[
     liiklusonnetuse_liik <- filtered_df$Liiklusonnetuse_liik[i]
     toimumisaeg <- filtered_df$Toimumisaeg[i]
     asula <- filtered_df$Asula[i]
+    closest_feature <- filtered_df$closest_feature[i]
+    distance <- round(filtered_df$distance[i], 2)  # Ümarda distance 2 kohta peale koma
     kaart <- addMarkers(kaart, lng = lng, lat = lat, popup = paste("Toimumisaeg:", toimumisaeg, "<br>",
                                                                   "Liiklusonnetuse liik:", liiklusonnetuse_liik, "<br>",
-                                                                  "Asula:", asula, "<br>"))
+                                                                  "Asula:", asula, "<br>",
+                                                                  "Lähim mõõdik:", closest_feature, " (", distance, " km)"))
   }
 
   kaart
 })
 
+
+
 }
 
-# Käivitame Shiny rakenduse
+# Activate Shiny application
 shinyApp(ui = ui, server = server)
